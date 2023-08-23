@@ -1,0 +1,19 @@
+///cria banco de dados para alarmes
+
+CREATE TABLE ConfigUmidade (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario VARCHAR(50),
+    umidade_min DECIMAL(5, 2),
+    umidade_max DECIMAL(5, 2),
+    data_hora DATETIME
+);
+
+CREATE TABLE ConfigTemp (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario VARCHAR(50),
+    temp_min DECIMAL(5, 2),
+    temp_max DECIMAL(5, 2),
+    data_hora DATETIME
+);
+
+////////fim

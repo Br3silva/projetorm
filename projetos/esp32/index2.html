@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leitura do Banco de Dados com Atualização Automática</title>
+    <style>
+        /* Estilos gerais para o corpo do documento */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Estilos para o container de resultado */
+        .resultado-container {
+            padding: 20px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            width: 300px;
+            margin: 50px auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Estilos para os parágrafos dentro do container de resultado */
+        .resultado-container p {
+            margin: 5px 0;
+        }
+
+        /* Estilos para o histórico */
+        .historico {
+            display: none;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="resultado-container">
+        <p id="valor1"></p>
+        <p id="descricao1"></p>
+        <button onclick="toggleHistorico('historico1')">Mostrar Historico</button>
+        <div id="historico1" class="historico">
+            <!-- Conteúdo do histórico para a primeira div -->
+        </div>
+    </div>
+    <div class="resultado-container">
+        <p id="valor2"></p>
+        <p id="descricao2"></p>
+        <button onclick="toggleHistorico('historico2')">Mostrar Historico</button>
+        <div id="historico2" class="historico">
+            <!-- Conteúdo do histórico para a segunda div -->
+        </div>
+    </div>
+
+    <script>
+        function toggleHistorico(divId) {
+            var historicoDiv = document.getElementById(divId);
+            historicoDiv.style.display = historicoDiv.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function atualizarDados() {
+            // Fazer uma requisição AJAX para obter os dados atualizados do servidor
+            fetch('atualizar_dados.php')
+                .then(response => response.json())
+                .then(data => {
+                    // Atualizar a tela com os dados recebidos
+                    if (data.error) {
+                        console.error(data.error);
+                    } else {
+                        document.getElementById('valor1').innerText = `Valor: ${data.I2}`;
+                        document.getElementById('descricao1').innerText = `Descricao: ${data.data_hora}`;
+                        document.getElementById('valor2').innerText = `Valor: ${data.I4}`;
+                        document.getElementById('descricao2').innerText = `Descricao: ${data.data_hora}`;
+                    }
+                })
+                .catch(error => console.error('Erro ao buscar resultado:', error));
+        }
+
+        // Chamar a função de atualização a cada 5 segundos (5000 ms)
+        setInterval(atualizarDados, 5000);
+
+        // Chamar a função de atualização uma vez quando a página carregar
+        atualizarDados();
+    </script>
+</body>
+</html>
