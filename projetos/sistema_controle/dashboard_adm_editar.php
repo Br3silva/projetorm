@@ -1,5 +1,6 @@
 <?php
 session_start();
+
 require('conexao.php');
 // Verificar se o usuário está logado, caso contrário, redirecionar para a página de login
 if (!isset($_SESSION['email']) || !isset($_SESSION['nivel_acesso'])) {
@@ -43,6 +44,8 @@ if (isset($_GET['logout'])) {
     header("Location: login.php"); // Redirecionar para a página de login após sair
     exit();
 }
+
+
 ?>
 
 <!DOCTYPE html>

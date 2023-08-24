@@ -16,4 +16,17 @@ CREATE TABLE ConfigTemp (
     data_hora DATETIME
 );
 
-////////fim
+///cria banco de dados para alarmes(fim)
+
+
+/// cria tabela de logs
+
+CREATE TABLE logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    mensagem TEXT,
+    origem_evento VARCHAR(100),
+    usuario_email VARCHAR(255)
+);
+
+/// cria tabela de logs(fim)

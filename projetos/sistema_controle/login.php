@@ -21,6 +21,7 @@
                     $email = $_POST['email'];
                     $senha = $_POST['senha'];
                     $nivel_acesso = $_POST['nivel_acesso'];
+                    $nome = $_POST['nome'];
 
                     // Preparar as consultas com declarações preparadas para evitar SQL injection
                     $checkUserQuery = "SELECT status, nivel_acesso FROM Usuarios WHERE email = ? AND senha = ?";
@@ -40,6 +41,7 @@
                             $_SESSION['nivel_acesso'] = $userData['nivel_acesso']; // Salvar nível de acesso na sessão
 
                             if ($userData['nivel_acesso'] === 'adm') {
+                                
                                 // Redirecionar para a página de dashboard do administrador
                                 header("Location: dashboard_adm_editar.php");
                                 exit;

@@ -1,4 +1,5 @@
 <?php
+
 function dbConnect() {
     $servername = "localhost";
     $username = "root";
@@ -97,4 +98,175 @@ function renderChartModal() {
     echo '</div>';
 }
 
+
+
+function inserirDadosNoBanco($servername, $username, $password, $dbname, $table, $email, $minValue, $maxValue) {
+    $conn = new mysqli($servername, $username, $password, $dbname);
+
+    if ($conn->connect_error) {
+        die("Erro na conexão: " . $conn->connect_error);
+    }
+
+    $sql = "INSERT INTO $table (usuario,temp_min,temp_max, data_hora) VALUES (?, ?, ?, NOW())";
+    $stmt = $conn->prepare($sql);
+
+    if ($stmt === false) {
+        echo "Erro na preparação da query: " . $conn->error;
+        exit;
+    }
+
+    $stmt->bind_param("sss", $email, $minValue, $maxValue);
+
+    if ($stmt->execute()) {
+     /*    echo "Dados inseridos com sucesso na tabela $table!"; */
+    } else {
+        echo "Erro ao inserir dados: " . $stmt->error;
+    }
+
+    $stmt->close();
+    $conn->close();
+}
+
+
+
+function adicionarLog($mensagem, $origem_evento, $usuario_email) {
+  
+    
+    $servername = "localhost";
+    $username = "root";
+    $password = "";
+    $dbname = "db_esp32";
+
+    $conn = new mysqli($servername, $username, $password, $dbname);
+
+    if ($conn->connect_error) {
+        die("Erro na conexão: " . $conn->connect_error);
+    }
+
+    $sql = "INSERT INTO logs (mensagem, origem_evento, usuario_email) VALUES (?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+
+    if ($stmt === false) {
+        echo "Erro na preparação da query: " . $conn->error;
+        exit;
+    }
+
+    $stmt->bind_param("sss", $mensagem, $origem_evento, $usuario_email);
+
+    if ($stmt->execute()) {
+        $mensagem = "Inserido com sucesso!";
+        $classeAlerta = "alert-success";
+    } else {
+        echo "Erro ao adicionar log: " . $stmt->error;
+    }
+
+    $stmt->close();
+    $conn->close();
+
+   // Redirecionamento após um pequeno atraso (2 segundos)
+echo "<div class='alert $classeAlerta' role='alert'>$mensagem</div>";
+echo "<script>setTimeout(function() { window.location.href = 'dashboard_adm_sensores.php'; }, 2000);</script>";
+}
+
+function consultarConfigTemp($email, $table) {
+    $servername = "localhost";
+    $username = "root";
+    $password = "";
+    $dbname = "db_esp32";
+
+    $conn = new mysqli($servername, $username, $password, $dbname);
+
+    if ($conn->connect_error) {
+        die("Erro na conexão: " . $conn->connect_error);
+    }
+
+    $sql = "SELECT temp_min, temp_max FROM $table WHERE usuario = ? ORDER BY data_hora DESC LIMIT 1";
+    $stmt = $conn->prepare($sql);
+
+    if ($stmt === false) {
+        echo "Erro na preparação da query: " . $conn->error;
+        exit;
+    }
+
+    $stmt->bind_param("s", $email);
+
+    $stmt->execute();
+    $stmt->bind_result($temp_min, $temp_max);
+    $stmt->fetch();
+
+    $stmt->close();
+    $conn->close();
+
+    return ['temp_min' => $temp_min, 'temp_max' => $temp_max];
+}
+
+
+function contarUltrapassagensTemperatura($limite) {
+    $servername = "localhost";
+    $username = "root";
+    $password = "";
+    $dbname = "db_esp32";
+
+    $conn = new mysqli($servername, $username, $password, $dbname);
+
+    if ($conn->connect_error) {
+        die("Erro na conexão: " . $conn->connect_error);
+    }
+
+    $sql = "SELECT COUNT(*) as total_ultrapassagens, MAX(temperatura) as max_temperatura FROM dados_esp32 WHERE temperatura > ?";
+    $stmt = $conn->prepare($sql);
+
+    if ($stmt === false) {
+        echo "Erro na preparação da query: " . $conn->error;
+        exit;
+    }
+
+    $stmt->bind_param("d", $limite);
+
+    $stmt->execute();
+    $stmt->bind_result($total_ultrapassagens, $max_temperatura);
+    $stmt->fetch();
+
+    $stmt->close();
+    $conn->close();
+
+    return ['total_ultrapassagens' => $total_ultrapassagens, 'max_temperatura' => $max_temperatura];
+}
+
+
+function contarTemperaturasAbaixoDoLimite($limite) {
+    $servername = "localhost";
+    $username = "root";
+    $password = "";
+    $dbname = "db_esp32";
+
+    $conn = new mysqli($servername, $username, $password, $dbname);
+
+    if ($conn->connect_error) {
+        die("Erro na conexão: " . $conn->connect_error);
+    }
+
+    $sql = "SELECT COUNT(*) as total_abaixo_limite, MIN(temperatura) as min_temperatura FROM dados_esp32 WHERE temperatura < ?";
+    $stmt = $conn->prepare($sql);
+
+    if ($stmt === false) {
+        echo "Erro na preparação da query: " . $conn->error;
+        exit;
+    }
+
+    $stmt->bind_param("d", $limite);
+
+    $stmt->execute();
+    $stmt->bind_result($total_abaixo_limite, $min_temperatura);
+    $stmt->fetch();
+
+    $stmt->close();
+    $conn->close();
+
+    return ['total_abaixo_limite' => $total_abaixo_limite, 'min_temperatura' => $min_temperatura];
+}
+
 ?>
+
+
+

@@ -1,4 +1,5 @@
 <?php
+include 'functions.php';
 session_start();
 require('conexao.php');
 // Verificar se o usuário está logado, caso contrário, redirecionar para a página de login
@@ -103,9 +104,32 @@ if (isset($_GET['logout'])) {
             margin-bottom: 10px;
             box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
         }
+
+        .widget-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            width: 300px;
+            text-align: center;
+        }
+
+        .widget-title {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background-color: #8e44ad;
+            border-color: #8e44ad;
+        }
+
+        .btn-primary:hover {
+            background-color: #6c3483;
+            border-color: #6c3483;
+        }
     </style>
 </head>
-
 <body>
     <div class="sidebar">
         <h4>Menu</h4>
@@ -118,6 +142,33 @@ if (isset($_GET['logout'])) {
     <div class="content">
         <h1>Dashboard do Administrador</h1>
         <?php
+        if ($_SERVER["REQUEST_METHOD"] == "POST") {
+            
+
+            $servername = "localhost";
+            $username = "root";
+            $password = "";
+            $dbname = "db_esp32";
+            $table = $_POST['table'];
+            $email = $_POST['email'];
+            $minValue = $_POST['minValue'];
+            $maxValue = $_POST['maxValue'];
+            $origemdoEvento = $_GET['valor'];
+
+
+            inserirDadosNoBanco($servername, $username, $password, $dbname, $table, $email, $minValue, $maxValue);
+            adicionarLog("alteracao dos setpoint", $origemdoEvento, $email);
+        }
+
+
+        // Captura o valor do parâmetro 'config_id' da URL
+        if (isset($_GET['valor'])) {
+            $vlrUrl = $_GET['valor'];
+        } else {
+            echo "ID de configuração não fornecido.";
+            exit;
+        }
+
         function getLatestValue($table, $column)
         {
             $servername = "localhost";
@@ -145,6 +196,36 @@ if (isset($_GET['logout'])) {
                 return "Nenhum valor encontrado.";
             }
         }
+
+        $consulta = consultarConfigTemp($_SESSION['email'], 'configtemp');
+
+        $temp_min = $consulta['temp_min'];
+        $temp_max = $consulta['temp_max'];
+
+       /*  echo "Valor Mínimo: $temp_min<br>";
+        echo "Valor Máximo: $temp_max<br>";
+ */
+        $limite = $temp_max; // Limite a ser verificado
+        $consulta = contarUltrapassagensTemperatura($limite);
+
+        $total_ultrapassagens = $consulta['total_ultrapassagens'];
+        $max_temperatura = $consulta['max_temperatura'];
+
+     /*    echo "Total de Ultrapassagens: $total_ultrapassagens<br>";
+        echo "Máxima Temperatura Ultrapassada: $max_temperatura<br>"; */
+
+
+
+
+        $limite = $temp_min; // Limite a ser verificado
+        $consulta = contarTemperaturasAbaixoDoLimite($limite);
+
+        $total_abaixo_limite = $consulta['total_abaixo_limite'];
+        $min_temperatura = $consulta['min_temperatura'];
+/* 
+        echo "Total de vezes abaixo do limite: $total_abaixo_limite<br>";
+        echo "Mínima Temperatura abaixo do limite: $min_temperatura<br>"; */
+
         ?>
 
         <title>Dashboard do Administrador</title>
@@ -161,8 +242,47 @@ if (isset($_GET['logout'])) {
                         <button class="btn btn-light" id="enviarBotao1" data-valor="I2" data-url="dashboard_adm_sensores_select.php">Historico</button>
                     </div>
                 </div>
+                <div class="col-md-4">
+                    <div class="info-window">
+                        <h3>Porta </h3>
+                        <p>Status Porta: <?php echo getLatestValue('dados_esp32', 'I4'); ?></p>
+                        <button class="btn btn-light" id="enviarBotao2" data-valor="I4" data-url="dashboard_adm_sensores_select.php">Historico</button>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    
+                        <div class="widget-container">
+                            <form method="post" action="">
+                                <div class="form-group">
+                                    <label for="maxValue">Valor Máximo:</label>
+                                    <input type="number" step="0.01" class="form-control" id="maxValue" name="maxValue" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="minValue">Valor Mínimo:</label>
+                                    <input type="number" step="0.01" class="form-control" id="minValue" name="minValue" required>
+                                </div>
+
+                                <input type="hidden" name="email" value="<?php echo $_SESSION['email']; ?>">
+                                <input type="hidden" name="table" value="<?php echo $vlrUrl; ?>">
+                                <button type="submit" class="btn btn-primary btn-block">Enviar</button>
+                        </div>
+                        </form>
+
+                    
 
 
+
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="info-window">
+                    <h3>Medição </h3>
+                    <p>Umidade: <?php echo getLatestValue('dados_esp32', 'humidade'); ?></p>
+
+                    <button class="btn btn-light" id="enviarBotao4" data-valor="humidade" data-url="dashboard_adm_sensores_select.php">Historico</button>
+
+                </div>
             </div>
             <div class="container mt-5">
 
@@ -174,12 +294,10 @@ if (isset($_GET['logout'])) {
     </div>
 
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
 
 </body>
 
